@@ -1,5 +1,6 @@
 from torch_geometric.datasets import Planetoid
 from examples.planetoid.experiment import PlanetoidExperiment
+from fosr.preprocessing.dataset import get_rewired_dataset
 from attrdict import AttrDict
 import numpy as np
 import pandas as pd
@@ -7,6 +8,12 @@ import pandas as pd
 cora = Planetoid(root="data", name="cora")
 citeseer = Planetoid(root="data", name="citeseer")
 pubmed = Planetoid(root="data", name="pubmed")
+
+mask = [i for i in range(2708) if cora.data.train_mask[i]]
+print(sum(citeseer.data.val_mask))
+input()
+
+get_rewired_dataset(cora, rewiring='fosr')
 
 dataset_lookup = {"cora": cora, "citeseer": citeseer, "pubmed": pubmed}
 
