@@ -18,7 +18,8 @@ class Experiment:
             "test_fraction": 0.1,
             "max_epochs": 1000000,
             "logs": None,
-            "lower_loss_is_better": True
+            "lower_loss_is_better": True,
+            "device": None
         }
         )
 
@@ -49,26 +50,28 @@ class Experiment:
             print("Starting training")
 
         # Keep track of progress to determine when to stop
-        best_validation_loss = inf
+        if self.args.lower_loss_is_better:
+            best_validation_loss = inf
+        else:
+            best_validation_loss = -inf
         epochs_no_improve = 0
 
         train_loader = DataLoader(self.train_dataset, batch_size=self.args.batch_size, shuffle=True)
         validation_loader = DataLoader(self.validation_dataset, batch_size=self.args.batch_size, shuffle=True)
         test_loader = DataLoader(self.test_dataset, batch_size=self.args.batch_size, shuffle=True)
-        complete_loader = DataLoader(self.dataset, batch_size=self.args.batch_size, shuffle=True)
 
         for epoch in range(1, 1 + self.args.max_epochs):
             
-            self.train_epoch()
+            self.train(loader=train_loader)
 
             new_best_str = ''
             if epoch % self.args.eval_every == 0:
                 # Evaluate, report progress, and check whether to stop training
-                train_loss= self.eval_epoch(loader=train_loader)
-                validation_loss = self.eval_epoch(loader=validation_loader)
-                test_loss = self.eval_epoch(loader=test_loader)
+                train_loss= self.eval(loader=train_loader)
+                validation_loss = self.eval(loader=validation_loader)
+                test_loss = self.eval(loader=test_loader)
 
-                if (validation_loss < best_validation_loss) == self.args.lower_loss_is_better:
+                if ((validation_loss < best_validation_loss * 0.9999) and self.args.lower_loss_is_better) or ((validation_loss > best_validation_loss * 1.0001) and not self.args.lower_loss_is_better):
                     # Checks if the validation loss is the best so far.
                     # Note: best_train_loss and best_test_loss are defined as the train and test loss when the validation loss is the lowest.
                     best_train_loss = train_loss
@@ -79,7 +82,7 @@ class Experiment:
                 else:
                     epochs_no_improve += 1
                 if self.args.display:
-                    print(f'Epoch {epoch}, Train: {train_loss}, Validation: {validation_loss}{new_best_str}, Test: {test_loss}')
+                    print(f'Epoch {epoch}, Train: {train_loss}, Validation: {validation_loss}{new_best_str}, Test: {test_loss} {new_best_str}')
                 if epochs_no_improve > self.args.patience:
                     if self.args.display:
                         print(f'{self.args.patience} epochs without improvement, stopping training')
@@ -90,8 +93,3 @@ class Experiment:
             print(f'Best train acc: {best_train_loss}, Best validation loss: {best_validation_loss}, Best test loss: {best_test_loss}')
 
         return train_loss, validation_loss, test_loss
-    def train_epoch(self, loader):
-        raise NotImplementedError
-    def eval_epoch(self, loader):
-        # Should return the loss as a tensor of shape (1,)
-        raise NotImplementedError
