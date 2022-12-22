@@ -1,2 +1,0 @@
-# gnn
-Experiments on GNNs.

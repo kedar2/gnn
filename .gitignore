@@ -1,5 +1,7 @@
 data/
 utils/
+wandb/
+unittests.py
 
 # Byte-compiled / optimized / DLL files
 **/__pycache__/
