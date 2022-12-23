@@ -7,7 +7,7 @@ from experiment import Experiment
 from torch_geometric.datasets import TUDataset
 from models import GNN
 from settings import Configuration, get_args_from_input
-from preprocessing.transforms import AddRandomNodeFeatures
+from preprocessing.transforms import Rewire, AddRandomFeaturesIfUnlabeled
 import torch_geometric.transforms as T
 
 
@@ -56,7 +56,7 @@ class TUDatasetExperiment(Experiment):
         sample_size = len(loader.dataset)
         total_correct = 0
         with torch.no_grad():
-            for graph in loader:
+            for graph in tqdm(loader, disable=(not self.display)):
                 graph = graph.to(self.device)
                 out = self.model(graph)
                 _, pred = out.max(dim=1)
@@ -82,8 +82,8 @@ def run():
     "hidden_dim": 128,
     "learning_rate": 1e-3,
     "layer_type": "GCN",
-    "rewiring": "fosr",
-    "num_iterations": 50,
+    "rewiring": "FoSR",
+    "num_iterations": 10,
     "num_relations": 2,
     "patience": 20,
     "dataset": "",
@@ -125,18 +125,17 @@ def run():
     }
     
     input_settings = get_args_from_input()
-    RandomNodeTransform = T.Compose([AddRandomNodeFeatures(100), T.ToUndirected()])
 
-    reddit = TUDataset(root="data", name="REDDIT-BINARY", transform=AddRandomNodeFeatures(100))
-    imdb = TUDataset(root="data", name="IMDB-BINARY", transform=RandomNodeTransform)
-    mutag = TUDataset(root="data", name="MUTAG", transform=T.ToUndirected())
-    enzymes = TUDataset(root="data", name="ENZYMES", transform=T.ToUndirected())
-    collab = TUDataset(root="data", name="COLLAB", transform=AddRandomNodeFeatures(100))
-    proteins = TUDataset(root="data", name="PROTEINS", transform=T.ToUndirected())
+    reddit = TUDataset(root="data", name="REDDIT-BINARY")
+    imdb = TUDataset(root="data", name="IMDB-BINARY")
+    mutag = TUDataset(root="data", name="MUTAG")
+    enzymes = TUDataset(root="data", name="ENZYMES")
+    collab = TUDataset(root="data", name="COLLAB")
+    proteins = TUDataset(root="data", name="PROTEINS")
 
     dataset_names = {"reddit": reddit, "imdb": imdb, "mutag": mutag, "enzymes": enzymes, "collab": collab, "proteins": proteins}
-    # Run experiment on all datasets or a single selected dataset.
 
+    # Run experiment on all datasets or a single selected dataset.
     if "dataset" in input_settings:
         name = input_settings["dataset"]
         datasets = {name: dataset_names[name]}
@@ -146,6 +145,16 @@ def run():
     for name, dataset in datasets.items():
         settings = {**default_settings, **dataset_settings[name], **input_settings}
         cfg = Configuration(**settings)
+
+        # Preprocess dataset.
+        transform = T.Compose([AddRandomFeaturesIfUnlabeled(100),
+                                T.ToUndirected(),
+                                Rewire(rewiring=cfg.rewiring,
+                                        num_iterations=cfg.num_iterations)
+                                ])
+        dataset = [transform(graph) for graph in dataset]
+
+        # Start experiment.
         print(f"Running experiment on {name}")
         for i in range(cfg.num_trials):
             print(f"Trial {i+1}")

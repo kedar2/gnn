@@ -5,6 +5,15 @@ from torch_geometric.nn import GCNConv, RGCNConv, SAGEConv, GINConv, FiLMConv, g
 from settings import Configuration
 
 class RGINConv(torch.nn.Module):
+    r"""
+    The relational GIN convolutional layer from the
+    'GNN-FiLM: Graph Neural Networks with Feature-wise Linear Modulation <https://arxiv.org/abs/1812.08797>' paper.
+
+    Args:
+        in_features (int): Number of input features.
+        out_features (int): Number of output features.
+        num_relations (int): Number of relations.    
+    """
     def __init__(self,
                 in_features: int,
                 out_features: int,
@@ -21,7 +30,7 @@ class RGINConv(torch.nn.Module):
     def forward(self,
                 x: torch.Tensor,
                 edge_index: torch.Tensor,
-                edge_type: torch.Tensor):
+                edge_type: torch.Tensor) -> torch.Tensor:
         x_new = self.self_loop_conv(x)
         for i, conv in enumerate(self.convs):
             rel_edge_index = edge_index[:, edge_type==i]
@@ -81,6 +90,8 @@ class GNN(torch.nn.Module):
         x, edge_index = graph.x, graph.edge_index
         for i, layer in enumerate(self.layers):
             if self.layer_type in ["R-GCN", "R-GIN"]:
+                if not hasattr(graph, "edge_type"):
+                    raise ValueError("Graphs must have an edge_type attribute for R-GCN and R-GIN layers.")
                 x = layer(x, edge_index, edge_type=graph.edge_type)
             else:
                 x = layer(x, edge_index)

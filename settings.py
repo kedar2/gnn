@@ -74,6 +74,12 @@ class Configuration(NamedTuple):
 def parse_bool(s: str) -> bool:
     """
     Parses a string into a boolean value.
+
+    Args:
+        s (str): String to parse.
+    
+    Returns:
+        bool: Boolean value of the string.
     """
     if s.lower() == "true":
         return True
@@ -85,6 +91,9 @@ def parse_bool(s: str) -> bool:
 def get_args_from_input() -> dict:
     """
     Parses command line arguments and returns them as a dict.
+
+    Returns:
+        dict: Dictionary of command line arguments.
     """
     parser = argparse.ArgumentParser(description='modify network parameters', argument_default=argparse.SUPPRESS)
     parser.add_argument('--learning_rate', metavar='', type=float, help='learning rate')
