@@ -1,8 +1,10 @@
 import argparse
 import torch
 from typing import NamedTuple
+from dataclasses import dataclass
 
-class Configuration(NamedTuple):
+@dataclass
+class Configuration:
     """
     Configuration settings for the experiment.
 
