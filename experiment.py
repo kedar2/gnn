@@ -79,7 +79,8 @@ class Experiment:
                 validation_criterion = self.eval(loader=validation_loader)
                 test_criterion = self.eval(loader=test_loader)
 
-                wandb.log({'train_criterion': train_criterion, 'validation_criterion': validation_criterion, 'test_criterion': test_criterion})
+                if self.cfg.wandb:
+                    wandb.log({'train_criterion': train_criterion, 'validation_criterion': validation_criterion, 'test_criterion': test_criterion})
 
                 if ((validation_criterion < best_validation_criterion * 0.9999) and self.lower_criterion_is_better) or ((validation_criterion > best_validation_criterion * 1.0001) and not self.lower_criterion_is_better):
                     # Checks if the validation loss is the best so far.
@@ -97,11 +98,13 @@ class Experiment:
                     if self.display:
                         print(f'\n{self.patience} epochs without improvement, stopping training\n')
                         print(f'Best train: {best_train_criterion}, Best validation: {best_validation_criterion}, Best test: {best_test_criterion}')
-                    wandb.log({'best_train_criterion': best_train_criterion, 'best_validation_criterion': best_validation_criterion, 'best_test_criterion': best_test_criterion})
+                    if self.cfg.wandb:
+                        wandb.log({'best_train_criterion': best_train_criterion, 'best_validation_criterion': best_validation_criterion, 'best_test_criterion': best_test_criterion})
                     return best_train_criterion, best_validation_criterion, best_test_criterion
         if self.display:
             print('\nReached max epoch count, stopping training')
-            wandb.log({'best_train_criterion': best_train_criterion, 'best_validation_criterion': best_validation_criterion, 'best_test_criterion': best_test_criterion})
+            if self.cfg.wandb:
+                wandb.log({'best_train_criterion': best_train_criterion, 'best_validation_criterion': best_validation_criterion, 'best_test_criterion': best_test_criterion})
             print(f'Best train acc: {best_train_criterion}, Best validation loss: {best_validation_criterion}, Best test loss: {best_test_criterion}')
 
         return train_criterion, validation_criterion, test_criterion

@@ -37,7 +37,7 @@ class Rewire(BaseTransform):
             data.edge_type = torch.from_numpy(edge_type)
             return data
         elif self.rewiring == "SDRF":
-            edge_index, edge_type = sdrf(data=data, loops=self.num_iterations)
+            edge_index, edge_type = sdrf(data=data, loops=self.num_iterations, is_undirected=True, remove_edges=False)
             data.edge_index = edge_index
             data.edge_type = edge_type
             return data
@@ -68,10 +68,11 @@ class AddRandomNodeFeatures(BaseTransform):
         Returns:
             data (torch_geometric.data.Data): Graph data with random features.
         """
-        if hasattr(data, "x") and data.x is not None:
-            data.x = torch.cat([data.x, torch.randn(data.num_nodes, self.num_features)], dim=1)
-        else:
-            data.x = torch.randn(data.num_nodes, self.num_features)
+        if self.num_features > 0:
+            if hasattr(data, "x") and data.x is not None:
+                data.x = torch.cat([data.x, torch.randn(data.num_nodes, self.num_features)], dim=1)
+            else:
+                data.x = torch.randn(data.num_nodes, self.num_features)
         return data        
 
 class AddRandomFeaturesIfUnlabeled(BaseTransform):
@@ -100,3 +101,25 @@ class AddRandomFeaturesIfUnlabeled(BaseTransform):
             data.x = torch.randn(data.num_nodes, self.num_features)
         return data
 
+class AddOneFeatures:
+    """
+    Adds one node features to the graph.
+    """
+    def __init__(self):
+        pass
+
+    def __call__(self, data: torch_geometric.data.Data) -> torch_geometric.data.Data:
+        """
+        Adds one node features to the graph if it does not already have features.
+
+        Args:
+            data (torch_geometric.data.Data): Graph data.
+        
+        Returns:
+            data (torch_geometric.data.Data): Graph data with one features.
+        """
+        if hasattr(data, "x") and data.x is not None:
+            return data
+        else:
+            data.x = torch.ones(data.num_nodes, 1)
+            return data

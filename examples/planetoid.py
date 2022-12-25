@@ -72,9 +72,12 @@ class PlanetoidExperiment(Experiment):
                 total_correct += pred[index].eq(self.y[index]).sum().item()
         return total_correct / sample_size
 
-def run():
+def run(input_settings: dict={}):
     """
     Loads datasets, creates an experiment, and runs it.
+
+    Args:
+        input_settings (dict): Dictionary containing settings to overwrite the default settings.
     """
 
     # Assign default settings and overwrite with input settings.
@@ -119,7 +122,6 @@ def run():
     },
     }
     
-    input_settings = get_args_from_input()
 
     cora = Planetoid(root="data", name="cora")
     citeseer = Planetoid(root="data", name="citeseer")

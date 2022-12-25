@@ -29,6 +29,7 @@ class Configuration:
         num_trials (int): Number of trials to run for the model.
         rewiring (str): Type of rewiring to use for the model.
         num_iterations (int): Number of iterations to run for the model.
+        num_random_features (int): Dimension of random features to augment nodes with.
         alpha (float): alpha hyperparameter for DIGL.
         k (int): k hyperparameter for DIGL.
         eps (float): eps hyperparameter for DIGL.
@@ -40,6 +41,7 @@ class Configuration:
         task_type (str): Type of task to run (e.g. 'graph_classification', 'node_regression').
         criterion_name (str): Name of the criterion used for validation.
         wandb (bool): Whether or not to use Weights and Biases to log results.
+        tuning (bool): Whether or not to tune hyperparameters.
     """
     learning_rate: float = 0.001
     max_epochs: int = 1000
@@ -61,6 +63,7 @@ class Configuration:
     num_trials: int = 10
     rewiring: str = 'FoSR'
     num_iterations: int = 10
+    num_random_features: int = 0
     alpha: float = 0.0015
     k: int = 10
     eps: float = 0.1
@@ -72,6 +75,7 @@ class Configuration:
     task_type: str = 'graph_classification'
     criterion_name: str = 'accuracy'
     wandb: bool = True
+    tuning: bool = False
 
 def parse_bool(s: str) -> bool:
     """
@@ -116,6 +120,7 @@ def get_args_from_input() -> dict:
     parser.add_argument('--num_trials', metavar='', type=int, help='number of times the network is trained'),
     parser.add_argument('--rewiring', metavar='', type=str, help='type of rewiring to be performed'),
     parser.add_argument('--num_iterations', metavar='', type=int, help='number of iterations of rewiring')
+    parser.add_argument('--num_random_features', metavar='', type=int, help='number of random features to augment node features with')
     parser.add_argument('--alpha', type=float, help='alpha hyperparameter for DIGL')
     parser.add_argument('--k', type=int, help='k hyperparameter for DIGL')
     parser.add_argument('--eps', type=float, help='epsilon hyperparameter for DIGL')
@@ -123,5 +128,6 @@ def get_args_from_input() -> dict:
     parser.add_argument('--benchmark', type=str, help='name of benchmark to run (eg. tudataset, ogb)')
     parser.add_argument('--last_layer_fa', type=parse_bool, help='whether or not to make last layer fully adjacent')
     parser.add_argument('--wandb', type=parse_bool, help='whether or not to use wandb to log results')
+    parser.add_argument('--tuning', type=parse_bool, help='whether or not to tune hyperparameters')
     arg_values = vars(parser.parse_args())
     return arg_values

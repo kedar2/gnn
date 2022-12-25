@@ -7,7 +7,7 @@ from experiment import Experiment
 from torch_geometric.datasets import TUDataset
 from models import GNN
 from settings import Configuration, get_args_from_input
-from preprocessing.transforms import Rewire, AddRandomFeaturesIfUnlabeled
+from preprocessing.transforms import Rewire, AddRandomNodeFeatures, AddOneFeatures
 import torch_geometric.transforms as T
 
 
@@ -35,20 +35,24 @@ class TUDatasetExperiment(Experiment):
                         cfg=cfg)
 
         self.loss_fn = torch.nn.CrossEntropyLoss()
-
+        cfg.input_dim = dataset[0].x.shape[1]
         self.model = GNN(cfg).to(self.device)
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=cfg.learning_rate, weight_decay=cfg.weight_decay)
+        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer)
 
     def train(self, loader: DataLoader):
-        # Train loop
+        # Train loop    
         self.model.train()
+        total_loss = 0
         for graph in tqdm(loader, disable=(not self.display)):
             self.optimizer.zero_grad()
             graph = graph.to(self.device)
             pred = self.model(graph)
             loss = self.loss_fn(input=pred, target=graph.y)
+            total_loss += loss.item()
             loss.backward()
             self.optimizer.step()
+        self.scheduler.step(total_loss)
 
     def eval(self, loader: DataLoader) -> float:
         # Evaluation loop, determines full-batch accuracy.
@@ -63,9 +67,12 @@ class TUDatasetExperiment(Experiment):
                 total_correct += pred.eq(graph.y).sum().item()
         return total_correct / sample_size
 
-def run():
+def run(input_settings: dict={}):
     """
     Loads datasets, creates an experiment, and runs it.
+
+    Args:
+        input_settings (dict): Dictionary containing settings to overwrite default settings.
     """
 
     # Assign default settings and overwrite with input settings.
@@ -75,17 +82,17 @@ def run():
     "max_epochs": 10000,
     "batch_size": 64,
     "eval_every": 1,
-    "num_trials": 5,
+    "num_trials": 1,
     "dropout": 0.5,
     "weight_decay": 1e-5,
-    "num_hidden_layers": 3,
-    "hidden_dim": 128,
+    "num_hidden_layers": 4,
+    "hidden_dim": 64,
     "learning_rate": 1e-3,
     "layer_type": "GCN",
     "rewiring": "FoSR",
     "num_iterations": 10,
     "num_relations": 2,
-    "patience": 20,
+    "patience": 100,
     "dataset": "",
     "last_layer_fa": False,
     "lower_criterion_is_better": False,
@@ -93,47 +100,39 @@ def run():
     }
 
     dataset_settings = {
-    "reddit": {
-        "dataset": "reddit",
-        "input_dim": 100,
+    "REDDIT-BINARY": {
+        "dataset": "REDDIT-BINARY",
         "output_dim": 2,
     },
-    "imdb": {
-        "dataset": "imdb",
-        "input_dim": 100,
+    "IMDB-BINARY": {
+        "dataset": "IMDB-BINARY",
         "output_dim": 2,
     },
-    "mutag": {
-        "dataset": "mutag",
-        "input_dim": 7,
+    "MUTAG": {
+        "dataset": "MUTAG",
         "output_dim": 2,
     },
-    "enzymes": {
-        "dataset": "enzymes",
-        "input_dim": 3,
+    "ENZYMES": {
+        "dataset": "ENZYMES",
         "output_dim": 6,
     },
-    "collab": {
-        "dataset": "collab",
-        "input_dim": 100,
-        "output_dim": 2,
+    "COLLAB": {
+        "dataset": "COLLAB",
+        "output_dim": 3,
     },
-    "proteins": {
-        "dataset": "proteins",
-        "input_dim": 3,
+    "PROTEINS": {
+        "dataset": "PROTEINS",
         "output_dim": 2}
     }
-    
-    input_settings = get_args_from_input()
 
-    reddit = TUDataset(root="data", name="REDDIT-BINARY")
-    imdb = TUDataset(root="data", name="IMDB-BINARY")
+    reddit_binary = TUDataset(root="data", name="REDDIT-BINARY")
+    imdb_binary = TUDataset(root="data", name="IMDB-BINARY")
     mutag = TUDataset(root="data", name="MUTAG")
     enzymes = TUDataset(root="data", name="ENZYMES")
     collab = TUDataset(root="data", name="COLLAB")
     proteins = TUDataset(root="data", name="PROTEINS")
 
-    dataset_names = {"reddit": reddit, "imdb": imdb, "mutag": mutag, "enzymes": enzymes, "collab": collab, "proteins": proteins}
+    dataset_names = {"REDDIT-BINARY": reddit_binary, "IMDB-BINARY": imdb_binary, "MUTAG": mutag, "ENZYMES": enzymes, "COLLAB": collab, "PROTEINS": proteins}
 
     # Run experiment on all datasets or a single selected dataset.
     if "dataset" in input_settings:
@@ -147,7 +146,8 @@ def run():
         cfg = Configuration(**settings)
 
         # Preprocess dataset.
-        transform = T.Compose([AddRandomFeaturesIfUnlabeled(100),
+        transform = T.Compose([AddOneFeatures(),
+                                AddRandomNodeFeatures(cfg.num_random_features),
                                 T.ToUndirected(),
                                 Rewire(rewiring=cfg.rewiring,
                                         num_iterations=cfg.num_iterations)
@@ -158,10 +158,16 @@ def run():
         print(f"Running experiment on {name}")
         for i in range(cfg.num_trials):
             print(f"Trial {i+1}")
-            trial = wandb.init(project="gnn",
+
+            if cfg.wandb and not cfg.tuning:
+                # Initialize wandb, not necessary if already initialized for tuning.
+                trial = wandb.init(project="gnn",
                         config={**default_settings, **dataset_settings[name], **input_settings},
                         group=f"{name}")
-            experiment = TUDatasetExperiment(dataset=dataset, cfg=cfg)
-            train_criterion, validation_criterion, test_criterion = experiment.run()
 
-            trial.finish()
+            experiment = TUDatasetExperiment(dataset=dataset, cfg=cfg)
+            experiment.run()
+
+            if cfg.wandb and not cfg.tuning:
+                # Finish wandb run, not necessary if performing further tuning.
+                trial.finish()
