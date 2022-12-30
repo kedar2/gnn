@@ -67,6 +67,8 @@ class TUDatasetExperiment(Experiment):
                 total_correct += pred.eq(graph.y).sum().item()
         return total_correct / sample_size
 
+#TODO: add virtual node setting, standardize pipeline across benchmarks
+
 def run(input_settings: dict={}):
     """
     Loads datasets, creates an experiment, and runs it.
@@ -84,10 +86,9 @@ def run(input_settings: dict={}):
     "eval_every": 1,
     "num_trials": 1,
     "dropout": 0.5,
-    "weight_decay": 1e-5,
+    "weight_decay": 0,
     "num_hidden_layers": 4,
     "hidden_dim": 64,
-    "learning_rate": 1e-3,
     "layer_type": "GCN",
     "rewiring": "FoSR",
     "num_iterations": 10,

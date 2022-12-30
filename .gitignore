@@ -1,6 +1,7 @@
 data/
 utils/
 wandb/
+scripts/
 unittests.py
 
 # Byte-compiled / optimized / DLL files
