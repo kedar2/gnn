@@ -3,17 +3,18 @@ import torch_geometric
 import wandb
 from tqdm import tqdm
 from torch.utils.data import DataLoader
+from ogb.graphproppred import PygGraphPropPredDataset, Evaluator
 from experiment import Experiment
-from torch_geometric.datasets import TUDataset
 from models import GNN
 from settings import Configuration, get_args_from_input
 from preprocessing.transforms import Rewire, AddRandomNodeFeatures, AddOneFeatures
 import torch_geometric.transforms as T
 
 
+
 class TUDatasetExperiment(Experiment):
     """
-    An extension of the Experiment class for the TUDataset benchmark.
+    An extension of the Experiment class for the OGB benchmark.
 
     Args:
         dataset (torch_geometric.data.Dataset): Full dataset.
@@ -102,40 +103,15 @@ def run(input_settings: dict={}):
     }
 
     dataset_settings = {
-    "REDDIT-BINARY": {
-        "dataset": "REDDIT-BINARY",
+    "ogbg-molhiv": {
+        "dataset": "ogbg_molhiv",
         "output_dim": 2,
-    },
-    "IMDB-BINARY": {
-        "dataset": "IMDB-BINARY",
-        "output_dim": 2,
-    },
-    "MUTAG": {
-        "dataset": "MUTAG",
-        "output_dim": 2,
-    },
-    "ENZYMES": {
-        "dataset": "ENZYMES",
-        "output_dim": 6,
-    },
-    "COLLAB": {
-        "dataset": "COLLAB",
-        "output_dim": 3,
-    },
-    "PROTEINS": {
-        "dataset": "PROTEINS",
-        "output_dim": 2}
+    }
     }
 
-    reddit_binary = TUDataset(root="data", name="REDDIT-BINARY")
-    imdb_binary = TUDataset(root="data", name="IMDB-BINARY")
-    mutag = TUDataset(root="data", name="MUTAG")
-    enzymes = TUDataset(root="data", name="ENZYMES")
-    collab = TUDataset(root="data", name="COLLAB")
-    proteins = TUDataset(root="data", name="PROTEINS")
+    molhiv = PygGraphPropPredDataset(name="ogbg-molhiv", root='data')
 
-    dataset_names = {"REDDIT-BINARY": reddit_binary, "IMDB-BINARY": imdb_binary, "MUTAG": mutag, "ENZYMES": enzymes, "COLLAB": collab, "PROTEINS": proteins}
-
+    dataset_names = {"ogbg-molhiv": molhiv}
     # Run experiment on all datasets or a single selected dataset.
     if "dataset" in input_settings:
         name = input_settings["dataset"]

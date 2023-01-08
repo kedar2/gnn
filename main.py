@@ -4,7 +4,8 @@ import wandb
 
 tudataset_names = ["REDDIT-BINARY", "IMDB-BINARY", "MUTAG", "ENZYMES", "COLLAB", "PROTEINS"]
 planetoid_names = ["cora", "citeseer", "pubmed"]
-benchmark_names = ["TUDataset", "Planetoid"]
+ogb_names = ["ogbg-molhiv"]
+benchmark_names = ["TUDataset", "Planetoid", "OGB"]
 
 def select_and_run_experiment(input_settings):
     """
@@ -20,6 +21,8 @@ def select_and_run_experiment(input_settings):
             benchmark = "TUDataset"
         elif dataset in planetoid_names:
             benchmark = "Planetoid"
+        elif dataset in ogb_names:
+            benchmark = "OGB"
         else:
             raise ValueError(f"Dataset \'{dataset}\' not found.")
     elif "benchmark" in input_settings:
@@ -29,6 +32,9 @@ def select_and_run_experiment(input_settings):
         run(input_settings)
     elif benchmark == "Planetoid":
         from examples.planetoid import run
+        run(input_settings)
+    elif benchmark == "OGB":
+        from examples.ogb_benchmark import run
         run(input_settings)
     else:
         raise ValueError("Benchmark not found.")
