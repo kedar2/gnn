@@ -5,7 +5,7 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader
 from experiment import Experiment
 from torch_geometric.datasets import TUDataset
-from models import GNN
+from models.gnn import GNN
 from settings import Configuration, get_args_from_input
 from preprocessing.transforms import Rewire, AddRandomNodeFeatures, AddOneFeatures
 import torch_geometric.transforms as T

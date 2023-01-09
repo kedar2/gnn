@@ -5,7 +5,7 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader
 from experiment import Experiment
 from torch_geometric.datasets import Planetoid
-from models import GNN
+from models.gnn import GNN
 from settings import Configuration, get_args_from_input
 
 
