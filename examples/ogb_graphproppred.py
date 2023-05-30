@@ -1,12 +1,11 @@
 import torch
 import torch_geometric
-import wandb
 from tqdm import tqdm
 from torch.utils.data import DataLoader
 from ogb.graphproppred import PygGraphPropPredDataset, Evaluator
-from experiment import Experiment
+from train import Experiment
 from models.gnn import GNN
-from settings import Configuration, get_args_from_input
+from config.settings import Configuration, get_args_from_input
 from preprocessing.transforms import Rewire, AddRandomNodeFeatures, AddOneFeatures
 from ogb.graphproppred.mol_encoder import AtomEncoder, BondEncoder
 import torch_geometric.transforms as T
@@ -160,15 +159,5 @@ def run(input_settings: dict={}):
         for i in range(cfg.num_trials):
             print(f"Trial {i+1}")
 
-            if cfg.wandb and not cfg.tuning:
-                # Initialize wandb, not necessary if already initialized for tuning.
-                trial = wandb.init(project="gnn",
-                        config={**default_settings, **dataset_settings[name], **input_settings},
-                        group=f"{name}")
-
             experiment = OGBGraphPropPredExperiment(dataset=dataset, cfg=cfg)
             experiment.run()
-
-            if cfg.wandb and not cfg.tuning:
-                # Finish wandb run, not necessary if performing further tuning.
-                trial.finish()

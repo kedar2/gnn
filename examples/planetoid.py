@@ -1,12 +1,11 @@
 import torch
 import torch_geometric
-import wandb
 from tqdm import tqdm
 from torch.utils.data import DataLoader
-from experiment import Experiment
+from train import Experiment
 from torch_geometric.datasets import Planetoid
 from models.gnn import GNN
-from settings import Configuration, get_args_from_input
+from config.settings import Configuration, get_args_from_input
 
 
 class PlanetoidExperiment(Experiment):
@@ -141,10 +140,5 @@ def run(input_settings: dict={}):
         print(f"Running experiment on {name}")
         for i in range(cfg.num_trials):
             print(f"Trial {i+1}")
-            trial = wandb.init(project="gnn",
-                        config={**default_settings, **dataset_settings[name], **input_settings},
-                        group=f"{name}")
             experiment = PlanetoidExperiment(dataset=dataset, cfg=cfg)
             train_criterion, validation_criterion, test_criterion = experiment.run()
-
-            trial.finish()

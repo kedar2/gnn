@@ -1,0 +1,10 @@
+dataset:
+  - "cora"
+task:
+  - "node_classification"
+loss_fn:
+  - "cross_entropy"
+metric:
+  - "accuracy"
+goal:
+  - "max"

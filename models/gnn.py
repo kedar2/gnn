@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from torch.nn import ModuleList, Dropout, ReLU
 from torch_geometric.nn import GCNConv, RGCNConv, SAGEConv, GINConv, FiLMConv, global_mean_pool
-from settings import Configuration
+from config.settings import Configuration
 
 class RGINConv(torch.nn.Module):
     r"""
@@ -47,7 +47,7 @@ class GNN(torch.nn.Module):
     def __init__(self,
                  cfg: Configuration=None):
         super(GNN, self).__init__()
-        self.num_relations = cfg.num_relations
+        self.num_relations = 1
         self.layer_type = cfg.layer_type
         num_features = [cfg.input_dim] + [cfg.hidden_dim] * cfg.num_hidden_layers + [cfg.output_dim]
         self.num_layers = len(num_features) - 1
@@ -73,7 +73,7 @@ class GNN(torch.nn.Module):
                 raise NotImplementedError(f"Last layer fully adjacent is not implemented for layer type {cfg.layer_type}.")
 
         # Pooling is only used for graph tasks
-        if "graph" in cfg.task_type:
+        if "graph" in cfg.task:
             self.pooling = True
         else:
             self.pooling = False
