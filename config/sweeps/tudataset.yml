@@ -1,0 +1,7 @@
+dataset:
+  - "REDDIT-BINARY"
+  - "IMDB-BINARY"
+  - "COLLAB"
+  - "MUTAG"
+  - "PROTEINS"
+  - "ENZYMES"

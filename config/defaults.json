@@ -1,8 +1,52 @@
 {
+    "REDDIT-BINARY":
+        {
+            "input_dim": 1,
+            "output_dim": 2,
+            "task": "graph_classification",
+            "loss_fn": "cross_entropy",
+            "metric": "accuracy",
+            "goal": "max"
+        },
+    "IMDB-BINARY":
+        {
+            "input_dim": 1,
+            "output_dim": 2,
+            "task": "graph_classification",
+            "loss_fn": "cross_entropy",
+            "metric": "accuracy",
+            "goal": "max"
+        },
     "MUTAG":
         {
-            "dataset": "MUTAG",
             "input_dim": 7,
+            "output_dim": 2,
+            "task": "graph_classification",
+            "loss_fn": "cross_entropy",
+            "metric": "accuracy",
+            "goal": "max"
+        },
+    "ENZYMES":
+        {
+            "input_dim": 3,
+            "output_dim": 6,
+            "task": "graph_classification",
+            "loss_fn": "cross_entropy",
+            "metric": "accuracy",
+            "goal": "max"
+        },
+    "COLLAB":
+        {
+            "input_dim": 1,
+            "output_dim": 3,
+            "task": "graph_classification",
+            "loss_fn": "cross_entropy",
+            "metric": "accuracy",
+            "goal": "max"
+        },
+    "PROTEINS":
+        {
+            "input_dim": 3,
             "output_dim": 2,
             "task": "graph_classification",
             "loss_fn": "cross_entropy",

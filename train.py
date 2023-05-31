@@ -47,6 +47,7 @@ class Experiment:
         self.eval_every = cfg.eval_every
         self.task = cfg.task
         self.wandb = cfg.wandb
+        self.sweep = cfg.sweep
         self.additional_metrics = cfg.additional_metrics
 
         self.train_loader = DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True)
@@ -71,7 +72,7 @@ class Experiment:
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=0.7, patience=5, min_lr=0.00001, verbose=True)
 
     def run(self):
-        if self.wandb:
+        if self.wandb and not self.sweep:
             wandb.init(project="gnn", config=self.cfg.asdict())
 
         # Keep track of progress to determine when to stop.
@@ -108,7 +109,9 @@ class Experiment:
         if self.display:
             print('\nReached max epoch count, stopping training')
             print(f'Best train {self.metric}: {best_train_metric}, Best validation {self.metric}: {best_validation_metric}, Best test {self.metric}: {best_test_metric}')
-
+        
+        if self.wandb:
+            wandb.log({f"best_train_{self.metric}": best_train_metric, f"best_validation_{self.metric}": best_validation_metric, f"best_test_{self.metric}": best_test_metric})
         return train_metric, validation_metric, test_metric
     def train(self):
         # Train loop    

@@ -11,7 +11,7 @@ class Configuration:
     """
     config_file: str = None # Path to YAML configuration file.
     learning_rate: float = 0.001 # Learning rate for the optimizer.
-    max_epochs: int = 1000 # Maximum number of epochs before stopping.
+    max_epochs: int = 100 # Maximum number of epochs before stopping.
     layer_type: str = 'GCN' # Type of layer to use for the model.
     display: bool = True # Whether or not to print progress.
     device: str = 'cuda' if torch.cuda.is_available() else 'cpu' # Name of device to use for training.
@@ -30,10 +30,16 @@ class Configuration:
     goal: str = "max" # Goal of the metric ("max" to maximize and "min" to minimize).
     task: str = None # Type of task of the dataset.
     wandb: bool = False # Whether or not to use wandb for logging.
+    sweep: bool = False # Whether or not to perform a hyperparameter sweep.
     additional_metrics: list = None # Additional metrics to use for evaluation.
 
     def asdict(self):
         return asdict(self)
+    def update(self, args: dict):
+        for key, value in args.items():
+            if not hasattr(self, key):
+                raise ValueError("Invalid setting: {}".format(key))
+            setattr(self, key, value)
     def set_defaults(self):
         if not self.dataset:
             return
@@ -63,12 +69,12 @@ def parse_bool(s: str) -> bool:
     else:
         raise ValueError("Invalid value for boolean argument: {}".format(s))
 
-def parse_cfg() -> dict:
+def parse_settings() -> dict:
     """
     Parses command line arguments and returns them as a dict.
 
     Returns:
-        cfg (Configuration): Configuration object containing experiment settings.
+        args (dict): Dictionary of settings.
     """
     parser = argparse.ArgumentParser(argument_default=argparse.SUPPRESS)
     parser.add_argument('--config_file', type=str)
@@ -91,7 +97,6 @@ def parse_cfg() -> dict:
     parser.add_argument('--task', type=str)
     parser.add_argument('--wandb', type=parse_bool)
 
-    arg_values = vars(parser.parse_args())
-    cfg = Configuration(**arg_values)
+    args = vars(parser.parse_args())
 
-    return cfg
+    return args

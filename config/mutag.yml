@@ -1,8 +1,0 @@
-dataset:
-  - "MUTAG"
-task:
-  - "graph_classification"
-loss_fn:
-  - "cross_entropy"
-metric:
-  - "accuracy"
