@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 from ogb.graphproppred import PygGraphPropPredDataset, Evaluator
 from train import Experiment
 from models.gnn import GNN
-from config.settings import Configuration, get_args_from_input
+from config.parsing import Configuration, get_args_from_input
 from preprocessing.transforms import Rewire, AddRandomNodeFeatures, AddOneFeatures
 from ogb.graphproppred.mol_encoder import AtomEncoder, BondEncoder
 import torch_geometric.transforms as T

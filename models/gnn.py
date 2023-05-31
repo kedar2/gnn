@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from torch.nn import ModuleList, Dropout, ReLU
 from torch_geometric.nn import GCNConv, RGCNConv, SAGEConv, GINConv, FiLMConv, global_mean_pool
-from config.settings import Configuration
+from config.parsing import Configuration
 
 class RGINConv(torch.nn.Module):
     r"""

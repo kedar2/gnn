@@ -4,8 +4,9 @@ from torch_geometric.loader import DataLoader
 from torch.utils.data import random_split
 from math import inf
 from tqdm import tqdm
-from config.settings import Configuration
+from config.parsing import Configuration
 from models.gnn import GNN
+import wandb
 
 class Experiment:
     """
@@ -45,6 +46,8 @@ class Experiment:
         self.display = cfg.display
         self.eval_every = cfg.eval_every
         self.task = cfg.task
+        self.wandb = cfg.wandb
+        self.additional_metrics = cfg.additional_metrics
 
         self.train_loader = DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True)
         self.validation_loader = DataLoader(self.validation_dataset, batch_size=self.batch_size, shuffle=False)
@@ -68,6 +71,9 @@ class Experiment:
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=0.7, patience=5, min_lr=0.00001, verbose=True)
 
     def run(self):
+        if self.wandb:
+            wandb.init(project="gnn", config=self.cfg.asdict())
+
         # Keep track of progress to determine when to stop.
         if self.goal == 'max':
             best_validation_metric = -inf
@@ -125,7 +131,8 @@ class Experiment:
         self.model.eval()
         loaders = [self.train_loader, self.validation_loader, self.test_loader]
         metrics = []
-        for loader in loaders:
+        epoch_metrics = {}
+        for split_name, loader in zip(["train", "validation", "test"], loaders):
             if self.metric == "accuracy":
                 sample_size = len(loader.dataset)
                 total_correct = 0
@@ -135,8 +142,12 @@ class Experiment:
                         out = self.model(graph)
                         _, pred = out.max(dim=1)
                         total_correct += pred.eq(graph.y).sum().item()
-                metrics.append(total_correct / sample_size)
+                acc = total_correct / sample_size
+                epoch_metrics[f"{split_name}_accuracy"] = acc
+                metrics.append(acc)
             else:
                 raise NotImplementedError(f"Metric {self.metric} not implemented.")
+        if self.wandb:
+            wandb.log(epoch_metrics)
         return metrics
 

@@ -1,0 +1,22 @@
+{
+    "MUTAG":
+        {
+            "dataset": "MUTAG",
+            "input_dim": 7,
+            "output_dim": 2,
+            "task": "graph_classification",
+            "loss_fn": "cross_entropy",
+            "metric": "accuracy",
+            "goal": "max"
+        },
+    "Cora":
+        {
+            "dataset": "Cora",
+            "input_dim": 1433,
+            "output_dim": 7,
+            "task": "node_classification",
+            "loss_fn": "cross_entropy",
+            "metric": "accuracy",
+            "goal": "max"
+        }
+}

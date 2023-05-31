@@ -1,7 +1,8 @@
 import argparse
 import torch
 from typing import NamedTuple, Optional
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
+import json
 
 @dataclass
 class Configuration:
@@ -22,12 +23,28 @@ class Configuration:
     output_dim: Optional[int] = None # Dimension of the output features.
     num_hidden_layers: int = 2 # Number of hidden layers in the model.
     batch_size: int = 32 # Batch size for the model.
-    dataset: str = 'MUTAG' # Name of the dataset to use for the model.
-    loss_fn: str = 'cross_entropy' # Loss function to use for training.
+    dataset: str = None # Name of the dataset to use for the model.
+    loss_fn: str = None # Loss function to use for training.
     last_layer_fa: bool = False # Whether or not to make the last layer fully adjacent.
-    metric: str = "accuracy" # Metric to use for evaluation.
-    goal: bool = True # Whether or not a lower metric is better (e.g. if metric is accuracy, then higher is better)
-    task: str = 'graph_classification' # Type of task of the dataset.
+    metric: str = None # Metric to use for evaluation.
+    goal: str = "max" # Goal of the metric ("max" to maximize and "min" to minimize).
+    task: str = None # Type of task of the dataset.
+    wandb: bool = False # Whether or not to use wandb for logging.
+    additional_metrics: list = None # Additional metrics to use for evaluation.
+
+    def asdict(self):
+        return asdict(self)
+    def set_defaults(self):
+        if not self.dataset:
+            return
+        settings = json.load(open("config/defaults.json", 'r'))
+        if self.dataset in settings:
+            dataset_settings = settings[self.dataset]
+            for key, value in dataset_settings.items():
+                if not hasattr(self, key):
+                    raise ValueError("Invalid setting: {}".format(key))
+                if not getattr(self, key):
+                    setattr(self, key, value)
 
 def parse_bool(s: str) -> bool:
     """
@@ -70,8 +87,9 @@ def parse_cfg() -> dict:
     parser.add_argument('--loss_fn', type=str)
     parser.add_argument('--last_layer_fa', type=parse_bool)
     parser.add_argument('--metric', type=str)
-    parser.add_argument('--goal', type=parse_bool)
+    parser.add_argument('--goal', type=str)
     parser.add_argument('--task', type=str)
+    parser.add_argument('--wandb', type=parse_bool)
 
     arg_values = vars(parser.parse_args())
     cfg = Configuration(**arg_values)

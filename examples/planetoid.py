@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 from train import Experiment
 from torch_geometric.datasets import Planetoid
 from models.gnn import GNN
-from config.settings import Configuration, get_args_from_input
+from config.parsing import Configuration, get_args_from_input
 
 
 class PlanetoidExperiment(Experiment):
