@@ -18,11 +18,11 @@ def main(cfg_dict: dict = None):
     """
     dataset, cfg, split = load_experiment(cfg_dict)
     if "graph" in cfg.task:
-        from exp.graph_task import run_experiment
+        from train.graph_task import run_experiment
         run_experiment(dataset, split, cfg)
     elif "node" in cfg.task:
         graph = dataset.data
-        from exp.node_task import run_experiment
+        from train.node_task import run_experiment
         run_experiment(graph, split, cfg)
     else:
         raise NotImplementedError(f"Task {cfg.task} not implemented.")

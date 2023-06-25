@@ -3,7 +3,7 @@ import torch_geometric
 from tqdm import tqdm
 from typing import Optional
 from config import DataSplit, ExperimentConfig
-from exp.register import model_register, scheduler_register, optimizer_register, loss_fn_register
+from train.register import model_register, scheduler_register, optimizer_register, loss_fn_register
 from math import inf
 
 def train_loop(model: torch.nn.Module,
