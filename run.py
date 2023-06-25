@@ -1,25 +1,38 @@
-from utils import train_val_test_split
-from train import Experiment
-from config.parsing import parse_settings, Configuration
 from torch_geometric.transforms import Constant
+import torch, torch_geometric, torch_geometric.loader
+from torch_geometric.loader import DataLoader
+import yaml
+from typing import Optional
+from tqdm import tqdm
+from config import ExperimentConfig
+from preprocess import load_experiment
 
-def main(args: dict=None):
-    cfg = Configuration(**args)
-    cfg.set_defaults()
-    if args:
-        cfg.update(args)
-    if cfg.dataset in ["REDDIT-BINARY", "IMDB-BINARY", "COLLAB", "ENZYMES", "PROTEINS", "MUTAG"]:
-        from torch_geometric.datasets import TUDataset
 
-        # add constant node features for datasets without node features
-        if cfg.dataset in ["REDDIT-BINARY", "IMDB-BINARY", "COLLAB"]:
-            dataset = TUDataset(root='data', name=cfg.dataset, pre_transform=Constant())
-        else:
-            dataset = TUDataset(root='data', name=cfg.dataset)
 
-        train_dataset, validation_dataset, test_dataset = train_val_test_split(dataset)
-        Experiment(cfg=cfg, train_dataset=train_dataset, validation_dataset=validation_dataset, test_dataset=test_dataset).run()
+def main(cfg_dict: dict = None):
+    """
+    Runs an experiment with the given configuration.
 
+    Args:
+        cfg_dict (dict): Dictionary containing the settings for the experiment.
+    """
+    dataset, cfg, split = load_experiment(cfg_dict)
+    if "graph" in cfg.task:
+        from exp.graph_task import run_experiment
+        run_experiment(dataset, split, cfg)
+    elif "node" in cfg.task:
+        graph = dataset.data
+        from exp.node_task import run_experiment
+        run_experiment(graph, split, cfg)
+    else:
+        raise NotImplementedError(f"Task {cfg.task} not implemented.")
+
+
+    
 if __name__ == "__main__":
-    args = parse_settings()
-    main(args)
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config", type=str, default="config/sample.yaml", help="path to config file")
+    args = parser.parse_args()
+    cfg_dict = yaml.load(open(args.config, "r"), Loader=yaml.FullLoader)
+    main(cfg_dict)
